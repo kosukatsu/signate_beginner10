@@ -1,0 +1,50 @@
+# Here you can define all your data sets by using simple YAML syntax.
+#
+# Documentation for this file format can be found in "The Data Catalog"
+# Link: https://kedro.readthedocs.io/en/stable/05_data/01_data_catalog.html
+
+train_raw_data_set:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/train.csv
+  load_args:
+    index_col: 0
+
+test_raw_data_set:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/test.csv
+  load_args:
+    index_col: 0
+
+train_data_set:
+  type: pickle.PickleDataSet
+  filepath: data/04_feature/train_data.pkl
+
+test_data_set:
+  type: pickle.PickleDataSet
+  filepath: data/04_feature/test_data.pkl
+
+pseudo_data:
+  type: pickle.PickleDataSet
+  filepath: data/05_model_input/pseudo_data.pkl
+
+lgbm_model:
+  type: pickle.PickleDataSet
+  filepath: data/06_models/lgbm_model
+  versioned: True
+
+lgbm_model_hypara_tuning:
+  type: pickle.PickleDataSet
+  filepath: data/06_models/lgbm_model_hypara_tuning.txt
+  versioned: True
+
+feature_importance:
+  type: pickle.PickleDataSet
+  filepath: data/06_models/feature_importance.pkl
+
+lgbm_output:
+  type: pandas.CSVDataSet
+  filepath: data/08_reporting/lgbm_output.csv
+  versioned: True
+  save_args:
+    header: False
+    index: False
