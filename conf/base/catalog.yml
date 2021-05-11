@@ -15,6 +15,12 @@ test_raw_data_set:
   load_args:
     index_col: 0
 
+sample_submission:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/sample_submission.csv
+  load_args:
+    header: None
+
 train_data_set:
   type: pickle.PickleDataSet
   filepath: data/04_feature/train_data.pkl

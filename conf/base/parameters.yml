@@ -1,0 +1,33 @@
+drop_feature:
+  [
+
+  ]
+
+cross_validation_k: 10
+
+train_rate: 0.8
+
+seed: 328
+
+default_lgbm_params:
+  task: "train"
+  boosting_type: "dart"
+  objective: "multiclass"
+  metric: "multi_logloss"
+  num_class: 11
+  verbose: 0
+  num_iterations: 100
+  verbose_eval: 5
+  device: cpu
+  num_threads: 6
+  max_bin: 32
+  max_depth: 10
+
+lgbm_params:
+  num_leaves: 31
+  min_data_in_leaf: 50
+  lambda_l1: 0.5045247115295503
+  lambda_l2: 1.3644528800808182e-06
+  feature_fraction: 0.9520000000000001
+  bagging_fraction: 0.8877260039410322
+  bagging_freq: 3
