@@ -11,8 +11,9 @@ from .lgbm import (
     predict,
     select_feature,
     pseudo_label,
+    dump_params,
 )
-from utils import split_data,drop_feature,merge_dictionary, merge_pseudo_data
+from utils import split_data,drop_feature,merge_dictionary, merge_pseudo_data,get_test_index
 
 
 def create_cross_validation_pipeline(**kwargs):
@@ -31,8 +32,8 @@ def create_cross_validation_pipeline(**kwargs):
             node(split_data, "train_data_concated_pseudo", ["train_x", "train_y"],),
             node(
                 merge_dictionary,
-                ["params:default_lgbm_params","params:lgbm_params"],
-                "lgbm_params"
+                ["params:default_lgbm_params","tuning_params"],
+                "lgbm_params",
             ),
             node(
                 cross_validation_model,
@@ -42,6 +43,7 @@ def create_cross_validation_pipeline(**kwargs):
                     "train_y": "train_y",
                     "k": "params:cross_validation_k",
                     "seed": "params:seed",
+                    "class_label":"params:class_labels",
                 },
                 "accuracy",
             ),
@@ -55,12 +57,12 @@ def create_hy_para_tuning_pipeline(**kwargs):
             node(
                 drop_feature,
                 ["train_data_set","params:drop_feature"],
-                "train_data_dropped_feature"
+                "train_data_dropped_feature",
             ),
             node(
                 merge_pseudo_data,
                 ["train_data_dropped_feature","pseudo_data","params:use_pseudo_label"],
-                "train_data_concated_pseudo"
+                "train_data_concated_pseudo",
             ),
             node(split_data, "train_data_concated_pseudo", ["train_x", "train_y"],),
             node(
@@ -71,9 +73,13 @@ def create_hy_para_tuning_pipeline(**kwargs):
                     "train_y": "train_y",
                     "k": "params:cross_validation_k",
                     "seed": "params:seed",
-                    "tuning_params": "params:lgbm_hyper_parameter_tuning",
                 },
                 "lgbm_model_hypara_tuning",
+            ),
+            node(
+                dump_params,
+                "lgbm_model_hypara_tuning",
+                "tuning_params",
             ),
         ]
     )
@@ -84,18 +90,18 @@ def create_real_train_pipeline(**kwargs):
         [
             node(
                 merge_dictionary,
-                ["params:default_lgbm_params","params:lgbm_params"],
-                "lgbm_params"
+                ["params:default_lgbm_params","tuning_params"],
+                "lgbm_params",
             ),
             node(
                 drop_feature,
                 ["train_data_set","params:drop_feature"],
-                "train_data_dropped_feature"
+                "train_data_dropped_feature",
             ),
             node(
                 merge_pseudo_data,
                 ["train_data_dropped_feature","pseudo_data","params:use_pseudo_label"],
-                "train_data_concated_pseudo"
+                "train_data_concated_pseudo",
             ),
             node(split_data, "train_data_concated_pseudo", ["train_x", "train_y"],),
             node(
@@ -106,6 +112,7 @@ def create_real_train_pipeline(**kwargs):
                     "train_y": "train_y",
                     "seed": "params:seed",
                     "train_rate": "params:train_rate",
+                    "class_label":"params:class_labels",
                 },
                 "lgbm_model",
             ),
@@ -119,26 +126,37 @@ def create_eval_pipeline(**kwargs):
             node(
                 drop_feature,
                 ["test_data_set","params:drop_feature"],
-                "test_data_dropped_feature"
+                "test_data_dropped_feature",
                 ),
             node(
+                get_test_index,
+                ["sample_submission"],
+                "test_data_index",
+            ),
+            node(
                 predict, 
-                ["test_data_dropped_feature", "lgbm_model"], 
-                "lgbm_output"),
+                ["test_data_dropped_feature", "lgbm_model","test_data_index"], 
+                "lgbm_output",
+            ),
         ],
     )
 
 def create_pseudo_label_pipeline(**kwargs):
     return Pipeline([
-        node(
-            drop_feature,
-            ["test_data_set","params:drop_feature"],
-            "test_data_dropped_feature"
+            node(
+                drop_feature,
+                ["test_data_set","params:drop_feature"],
+                "test_data_dropped_feature",
+                ),
+            node(
+                get_test_index,
+                ["sample_submission"],
+                "test_data_index",
             ),
-        node(
-            pseudo_label, 
-            ["test_data_dropped_feature", "lgbm_model","params:importance_threthold"], 
-            "pseudo_data"
+            node(
+                pseudo_label, 
+                ["test_data_dropped_feature", "lgbm_model","params:importance_threthold","test_data_index"], 
+                "pseudo_data",
             ),
         ]
         )
@@ -148,13 +166,13 @@ def create_select_feature_pipeline(**kwargs):
         [
             node(
                 merge_dictionary,
-                ["params:default_lgbm_params","params:lgbm_params"],
-                "lgbm_params"
+                ["params:default_lgbm_params","tuning_params"],
+                "lgbm_params",
                 ),
             node(
                 drop_feature,
                 ["train_data_set","params:drop_feature"],
-                "train_data_dropped_feature"
+                "train_data_dropped_feature",
                 ),
             node(split_data, "train_data_dropped_feature", ["train_x", "train_y"]),
             # node(
@@ -164,7 +182,7 @@ def create_select_feature_pipeline(**kwargs):
             #     ),
             node(
                 select_feature,
-                ["lgbm_model", "lgbm_params", "train_x", "train_y"],
+                ["lgbm_params", "train_x", "train_y"],
                 "feature_importance",
             ),
         ]

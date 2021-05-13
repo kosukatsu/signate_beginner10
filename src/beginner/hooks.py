@@ -32,10 +32,34 @@ from typing import Any, Dict, Iterable, Optional
 from kedro.config import ConfigLoader
 from kedro.framework.hooks import hook_impl
 from kedro.io import DataCatalog
+from kedro.pipeline import Pipeline 
 from kedro.versioning import Journal
 
+import beginner.pipelines.data_engeering as de
+import beginner.pipelines.lgbm as ds_lgbm
 
 class ProjectHooks:
+    @hook_impl
+    def register_pipelines(self) -> Dict[str, Pipeline]:
+        train_data_pipeline = de.create_train_data_pipeline()
+        test_data_pipeline = de.create_test_data_pipeline()
+        cross_valid_pipeline = ds_lgbm.create_cross_validation_pipeline()
+        hy_para_tuning_pipeline = ds_lgbm.create_hy_para_tuning_pipeline()
+        eval_pipeline = ds_lgbm.create_eval_pipeline()
+        train_pipeline = ds_lgbm.create_real_train_pipeline()
+        return {
+            "__default__": train_data_pipeline
+            + test_data_pipeline
+            + train_pipeline
+            + eval_pipeline,
+            "cross_valid": train_data_pipeline + cross_valid_pipeline,
+            "hy_para_tuning": train_data_pipeline + hy_para_tuning_pipeline,
+            "data_engeering": train_data_pipeline,
+            "preprocess_test_data": test_data_pipeline,
+            "train": train_pipeline,
+            "eval": eval_pipeline,
+        }
+
     @hook_impl
     def register_config_loader(
         self, conf_paths: Iterable[str], env: str, extra_params: Dict[str, Any],

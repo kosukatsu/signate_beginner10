@@ -19,7 +19,7 @@ sample_submission:
   type: pandas.CSVDataSet
   filepath: data/01_raw/sample_submission.csv
   load_args:
-    header: None
+    header: null
 
 train_data_set:
   type: pickle.PickleDataSet
@@ -54,3 +54,8 @@ lgbm_output:
   save_args:
     header: False
     index: False
+
+tuning_params:
+  type: yaml.YAMLDataSet
+  filepath: data/06_models/tuning.yml
+  versioned: True
